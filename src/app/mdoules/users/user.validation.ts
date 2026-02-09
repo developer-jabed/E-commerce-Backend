@@ -45,3 +45,16 @@ export const createCustomerSchema = z.object({
     country: z.string().max(100, "Country too long").optional(),
   }),
 });
+
+
+export const updateProfileSchema = z.object({
+  body: z.object({
+    name: z.string().min(2, "Name must be at least 2 characters").optional(),
+    email: z.string().email("Invalid email address").optional(),
+    phone: z.string().min(6, "Phone must be at least 6 digits").max(15).optional(),
+    address: z.string().max(200, "Address too long").optional(),
+    city: z.string().max(100, "City too long").optional(),
+    country: z.string().max(100, "Country too long").optional(),
+    avatarUrl: z.string().url("Invalid URL").optional(),
+  }),
+});
