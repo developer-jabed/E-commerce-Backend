@@ -1,0 +1,43 @@
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+
+  avatarUrl String?  
+  isBlocked Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  admin     Admin?
+  customer  Customer?
+}
+
+model Admin {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  roleLabel String @default("Super Admin")
+
+  lastLoginAt DateTime?
+}
+
+
+model Customer {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  phone        String?
+  address      String?
+  city         String?
+  country      String?
+
+  cancelCount  Int      @default(0)
+  loyaltyPoint Int      @default(0)
+
+  cart   Cart?
+  orders Order[]
+}
