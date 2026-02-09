@@ -8,8 +8,8 @@ async function bootstrap() {
   let server: Server;
 
   try {
-    // ✅ Step 1: Seed the Admin before server starts
-    // await seedAdmin();
+   
+    await seedAdmin();
 
      const pong = await redis.ping();
 

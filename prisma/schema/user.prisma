@@ -3,41 +3,51 @@ model User {
   name      String
   email     String   @unique
   password  String
-
-  avatarUrl String?  
+  avatarUrl String?
+  role      Role     @default(CUSTOMER)
   isBlocked Boolean  @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Relations
   admin     Admin?
   customer  Customer?
 }
 
+// ---------------------
+// Admin Model (1:1 with User)
+// ---------------------
 model Admin {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
 
-  roleLabel String @default("Super Admin")
+  roleLabel String   @default("Super Admin")
+  lastLogin DateTime?
 
-  lastLoginAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-
+// ---------------------
+// Customer Model (1:1 with User)
+// ---------------------
 model Customer {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
-
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id])
   phone        String?
   address      String?
   city         String?
   country      String?
+  cancelCount  Int       @default(0)
+  loyaltyPoint Int       @default(100)
+  reviews      Review[]   @relation("CustomerReviews")
 
-  cancelCount  Int      @default(0)
-  loyaltyPoint Int      @default(0)
+  cart         Cart?
+  orders       Order[]
 
-  cart   Cart?
-  orders Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
