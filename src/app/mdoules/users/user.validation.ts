@@ -39,13 +39,7 @@ export const createCustomerSchema = z.object({
     email: emailSchema,
     password: passwordSchema,
     avatarUrl: avatarUrlSchema,
-
-    phone: z
-      .string()
-      .min(6, "Phone must be at least 6 digits")
-      .max(15, "Phone cannot exceed 15 digits")
-      .optional(),
-
+    phone: z.string().min(6, "Phone must be at least 6 digits").max(15, "Phone cannot exceed 15 digits").optional(),
     address: z.string().max(200, "Address too long").optional(),
     city: z.string().max(100, "City too long").optional(),
     country: z.string().max(100, "Country too long").optional(),

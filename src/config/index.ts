@@ -10,4 +10,10 @@ export default {
     admin_email: process.env.ADMIN_EMAIL,
     admin_password: process.env.ADMIN_PASSWORD,
     redisUrl: process.env.REDIS_URL,
+    salt_round: process.env.SALT_ROUND || 10,
+    cloudinary: {
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET
+    }
 };

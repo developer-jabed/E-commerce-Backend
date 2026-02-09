@@ -3,22 +3,26 @@ import app from './app';
 import config from './config';
 import { seedAdmin } from './app/helper/seedAdmin';
 import redis from './app/helper/redis';
+import { testCloudinaryConnection } from './app/helper/testCloudinary';
 
 async function bootstrap() {
   let server: Server;
 
   try {
-   
+
     await seedAdmin();
 
-     const pong = await redis.ping();
+    const pong = await redis.ping();
 
-      if (pong === 'PONG') {
-        console.log('✅ Redis connection successful');
-      } else {
-        console.error('❌ Redis connection failed');
-        process.exit(1);
-      }
+    if (pong === 'PONG') {
+      console.log('✅ Redis connection successful');
+    } else {
+      console.error('❌ Redis connection failed');
+      process.exit(1);
+    }
+
+    await testCloudinaryConnection();
+
 
     // ✅ Step 2: Start the server
     server = app.listen(config.port, () => {

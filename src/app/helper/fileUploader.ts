@@ -23,6 +23,8 @@ const uploadToCloudinary = async (file: Express.Multer.File) => {
         api_secret: config.cloudinary.api_secret
     });
 
+    
+
     // Upload an image
     const uploadResult = await cloudinary.uploader
         .upload(
