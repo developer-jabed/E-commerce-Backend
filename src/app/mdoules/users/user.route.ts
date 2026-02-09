@@ -1,7 +1,7 @@
 import express, { NextFunction, Request, Response } from "express";
 import { userController } from "./user.controller";
 import { fileUploader } from "../../helper/fileUploader";
-import { createAdminSchema, createCustomerSchema } from "./user.validation";
+import { createAdminSchema, createCustomerSchema, updateProfileSchema } from "./user.validation";
 
 const router = express.Router();
 
@@ -45,6 +45,23 @@ router.post(
   }
 );
 
+router.patch(
+  "/update-profile/:id",
+  fileUploader.upload.single("file"), // optional avatar upload
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const jsonData = req.body.data ? JSON.parse(req.body.data) : req.body;
+
+      const validated = updateProfileSchema.parse({ body: jsonData });
+
+      req.body = validated.body;
+
+      return userController.updateProfile(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 
 

@@ -1,5 +1,7 @@
 import express from 'express';
 import { userRoutes } from '../mdoules/users/user.route';
+import { authRoutes } from '../mdoules/auth/auth.route';
+import { AdminRoutes } from '../mdoules/admin/admin.route';
 
 const router = express.Router();
 
@@ -10,6 +12,14 @@ const moduleRoutes = [
     route: userRoutes
 
   },
+  {
+    path: '/auth',
+    route: authRoutes
+  },
+  {
+    path: '/admins',
+    route: AdminRoutes
+  }
 ];
 
 moduleRoutes.forEach(route => router.use(route.path, route.route))
