@@ -1,25 +1,24 @@
 // src/app/modules/admin/admin.controller.ts
 
 import { NextFunction, Request, Response } from "express";
-import { AdminService } from "./admin.service";
-import { adminFilterableFields } from "./admin.constant";
 import httpStatus from "http-status";
 import catchAsync from "../../shared/catchAsync";
 import pick from "../../helper/pick";
 import sendResponse from "../../shared/sendResponse";
-
+import { customerFilterableFields } from "./customer.constant";
+import { CustomerService } from "./customer.service";
 
 const getAllFromDB = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const filters = pick(req.query, adminFilterableFields);
+    const filters = pick(req.query, customerFilterableFields);
     const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
 
-    const result = await AdminService.getAllFromDB(filters, options);
+    const result = await CustomerService.getAllFromDB(filters, options);
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: "Admins retrieved successfully",
+      message: "Customers retrieved successfully",
       meta: result.meta,
       data: result.data,
     });
@@ -28,12 +27,12 @@ const getAllFromDB = catchAsync(
 
 const getByIdFromDB = catchAsync(
   async (req: Request, res: Response) => {
-    const result = await AdminService.getByIdFromDB(req.params.id);
+    const result = await CustomerService.getByIdFromDB(req.params.id);
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: "Admin retrieved successfully",
+      message: "Customer retrieved successfully",
       data: result,
     });
   }
@@ -41,12 +40,12 @@ const getByIdFromDB = catchAsync(
 
 const deleteFromDB = catchAsync(
   async (req: Request, res: Response) => {
-    const result = await AdminService.deleteFromDB(req.params.id);
+    const result = await CustomerService.deleteFromDB(req.params.id);
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: "Admin deleted permanently",
+      message: "Customer deleted permanently",
       data: result,
     });
   }
@@ -54,12 +53,12 @@ const deleteFromDB = catchAsync(
 
 const updateStatus = catchAsync(
   async (req: Request, res: Response) => {
-    const result = await AdminService.updateStatus(req.params.id);
+    const result = await CustomerService.updateStatus(req.params.id);
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: "Admin status updated",
+      message: "Customer status updated",
       data: result,
     });
   }
@@ -67,18 +66,18 @@ const updateStatus = catchAsync(
 
 const softDeleteFromDB = catchAsync(
   async (req: Request, res: Response) => {
-    const result = await AdminService.softDeleteFromDB(req.params.id);
+    const result = await CustomerService.softDeleteFromDB(req.params.id);
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: "Admin soft deleted",
+      message: "Customer soft deleted",
       data: result,
     });
   }
 );
 
-export const AdminController = {
+export const CustomerController = {
   getAllFromDB,
   getByIdFromDB,
   updateStatus,

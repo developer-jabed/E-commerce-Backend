@@ -12,6 +12,8 @@ router.get("/:id", auth(Role.ADMIN), AdminController.getByIdFromDB);
 
 router.delete("/:id", auth(Role.ADMIN), AdminController.deleteFromDB);
 
+router.patch("/unblock/:id", auth(Role.ADMIN), AdminController.updateStatus);
+
 router.delete("/soft/:id", auth(Role.ADMIN), AdminController.softDeleteFromDB);
 
 export const AdminRoutes = router;

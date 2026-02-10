@@ -6,7 +6,7 @@ import httpStatus from "http-status";
 import { IOptions, paginationHelper } from "../../helper/paginationHelper";
 import { prisma } from "../../shared/prisma";
 
-   
+
 
 
 const getAllFromDB = async (
@@ -80,36 +80,93 @@ const getAllFromDB = async (
   };
 };
 
-
-const deleteFromDB = async (id: string): Promise<Admin> => {
-  const admin = await prisma.admin.delete({
-    where: { id },
-  });
-
-  return admin;
-};
-
-const softDeleteFromDB = async (id: string) => {
+const getByIdFromDB = async (id: string) => {
   const admin = await prisma.admin.findUnique({
     where: { id },
     include: { user: true },
   });
 
-  if (!admin) {
+    if (!admin) {
     throw new ApiError(httpStatus.NOT_FOUND, "Admin not found");
   }
 
-  await prisma.user.update({
-    where: { id: admin.userId },
-    data: { isBlocked: true },
-  });
 
   return admin;
 };
 
+
+const deleteFromDB = async (id: string): Promise<Admin> => {
+  return prisma.$transaction(async tx => {
+    const admin = await tx.admin.findUnique({
+      where: { id },
+    });
+
+    if (!admin) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Admin not found');
+    }
+
+    await tx.admin.delete({
+      where: { id },
+    });
+
+    await tx.user.delete({
+      where: { id: admin.userId },
+    });
+
+    return admin;
+  });
+};
+
+
+const updateStatus = async (id: string) => {
+  return prisma.$transaction(async tx => {
+    const admin = await tx.admin.findUnique({
+      where: { id },
+    });
+
+    if (!admin) {
+      throw new ApiError(httpStatus.NOT_FOUND, "Admin not found");
+    }
+
+    await tx.user.update({
+      where: { id: admin.userId },
+      data: { isBlocked: false },
+    });
+
+    return tx.admin.findUnique({
+      where: { id },
+      include: { user: true },
+    });
+  });
+};
+
+const softDeleteFromDB = async (id: string) => {
+  return prisma.$transaction(async tx => {
+    const admin = await tx.admin.findUnique({
+      where: { id },
+    });
+
+    if (!admin) {
+      throw new ApiError(httpStatus.NOT_FOUND, "Admin not found");
+    }
+
+    await tx.user.update({
+      where: { id: admin.userId },
+      data: { isBlocked: true },
+    });
+
+    return tx.admin.findUnique({
+      where: { id },
+      include: { user: true },
+    });
+  });
+};
+
+
 export const AdminService = {
   getAllFromDB,
-//   getByIdFromDB,
+  getByIdFromDB,
+  updateStatus,
   deleteFromDB,
   softDeleteFromDB,
 };
