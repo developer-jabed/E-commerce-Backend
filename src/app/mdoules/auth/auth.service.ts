@@ -21,31 +21,46 @@ interface ChangePasswordPayload {
 
 
 const loginUser = async (payload: LoginPayload) => {
+  // 1️⃣ Find user
   const user = await prisma.user.findUniqueOrThrow({
     where: { email: payload.email },
+    include: { customer: true }, // include customer relation
   });
 
-  if (user.isBlocked !== false) {
+  if (user.isBlocked) {
     throw new ApiError(httpStatus.FORBIDDEN, "User is not active");
   }
 
+  // 2️⃣ Verify password
   const isPasswordValid = await bcrypt.compare(payload.password, user.password!);
-  if (!isPasswordValid) throw new ApiError(httpStatus.UNAUTHORIZED, "Password incorrect");
+  if (!isPasswordValid) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Password incorrect");
+  }
+
+
+  const payloadData = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    customerId: user.customer?.id || null, 
+  };
 
   const accessToken = jwtHelpers.generateToken(
-    { id: user.id, email: user.email, role: user.role },
+    payloadData,
     config.jwt.jwt_secret as Secret,
     config.jwt.expires_in as string
   );
 
   const refreshToken = jwtHelpers.generateToken(
-    { id: user.id, email: user.email, role: user.role },
+    payloadData,
     config.jwt.refresh_token_secret as Secret,
     config.jwt.refresh_token_expires_in as string
   );
 
   return { accessToken, refreshToken };
 };
+
 
 
 const refreshToken = async (token: string) => {

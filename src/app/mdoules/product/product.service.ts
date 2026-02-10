@@ -3,13 +3,32 @@ import httpStatus from "http-status";
 import { productSearchableFields } from "./product.constant";
 import { prisma } from "../../shared/prisma";
 import ApiError from "../../errors/api.error";
+import { fileUploader } from "../../helper/fileUploader";
+import { IProduct } from "./product.interface";
 
-const createIntoDB = async (payload: Prisma.ProductCreateInput) => {
-  const result = await prisma.product.create({
-    data: payload,
+const createProduct = async (req: any) => {
+  const { name, description, price, stock } = req.body as IProduct;
+
+  let imageUrls: string[] = [];
+
+  if (req.files && req.files.length > 0) {
+    for (const file of req.files) {
+      const uploadResult = await fileUploader.uploadToCloudinary(file);
+      if (uploadResult?.secure_url) imageUrls.push(uploadResult.secure_url);
+    }
+  }
+
+  const product = await prisma.product.create({
+    data: {
+      name,
+      description,
+      price,
+      stock,
+      images: imageUrls,
+    },
   });
 
-  return result;
+  return product;
 };
 
 const getAllFromDB = async (query: any) => {
@@ -90,23 +109,43 @@ const getByIdFromDB = async (id: string) => {
   return result;
 };
 
-const updateIntoDB = async (
-  id: string,
-  payload: Prisma.ProductUpdateInput
-) => {
-  const isExist = await prisma.product.findUnique({ where: { id } });
+const updateProduct = async (req: any) => {
+  const productId = req.params.id;
+  const { name, description, price, stock } = req.body as IProduct;
 
-  if (!isExist) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
-  }
-
-  const result = await prisma.product.update({
-    where: { id },
-    data: payload,
+  // fetch existing product
+  const existingProduct = await prisma.product.findUnique({
+    where: { id: productId },
   });
 
-  return result;
+  if (!existingProduct) {
+    throw new Error("Product not found");
+  }
+
+  let imageUrls = existingProduct.images;
+
+  // add new images if uploaded
+  if (req.files && req.files.length > 0) {
+    for (const file of req.files) {
+      const uploadResult = await fileUploader.uploadToCloudinary(file);
+      if (uploadResult?.secure_url) imageUrls.push(uploadResult.secure_url);
+    }
+  }
+
+  const updatedProduct = await prisma.product.update({
+    where: { id: productId },
+    data: {
+      name: name ?? existingProduct.name,
+      description: description ?? existingProduct.description,
+      price: price ?? existingProduct.price,
+      stock: stock ?? existingProduct.stock,
+      images: imageUrls,
+    },
+  });
+
+  return updatedProduct;
 };
+
 
 const deleteFromDB = async (id: string) => {
   const isExist = await prisma.product.findUnique({ where: { id } });
@@ -123,9 +162,9 @@ const deleteFromDB = async (id: string) => {
 };
 
 export const ProductService = {
-  createIntoDB,
+  createProduct,
   getAllFromDB,
   getByIdFromDB,
-  updateIntoDB,
+  updateProduct,
   deleteFromDB,
 };

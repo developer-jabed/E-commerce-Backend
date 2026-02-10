@@ -5,7 +5,7 @@ import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 
 const createProduct = catchAsync(async (req: Request, res: Response) => {
-  const result = await ProductService.createIntoDB(req.body);
+  const result = await ProductService.createProduct(req);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -39,10 +39,7 @@ const getProductById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateProduct = catchAsync(async (req: Request, res: Response) => {
-  const result = await ProductService.updateIntoDB(
-    req.params.id,
-    req.body
-  );
+  const result = await ProductService.updateProduct(req);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
