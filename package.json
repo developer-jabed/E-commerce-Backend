@@ -7,9 +7,9 @@
     "schema": "./prisma/schema"
   },
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.js",
     "build": "tsc",
-    "start": "node src/server.ts",
+    "start": "node dist/server.js",
     "format": "prettier --write .",
     "db:generate": "pnpm exec prisma generate",
     "db:migrate": "pnpm exec prisma migrate deploy",

@@ -10,7 +10,7 @@ addToCart: async (
   payload: IAddToCartPayload
 ): Promise<ICart> => {
 
-  // 1️⃣ Always get cart from DB for mutation safety
+
   let cart = await prisma.cart.findUnique({
     where: { customerId },
     include: { items: true },
@@ -23,7 +23,7 @@ addToCart: async (
     });
   }
 
-  // 2️⃣ Check if product exists in cart (FROM DB, not cache)
+
   const existingItem = await prisma.cartItem.findFirst({
     where: {
       cartId: cart.id,
@@ -32,7 +32,7 @@ addToCart: async (
   });
 
   if (existingItem) {
-    // 3️⃣ Safe atomic increment
+
     await prisma.cartItem.update({
       where: { id: existingItem.id },
       data: {
@@ -51,7 +51,7 @@ addToCart: async (
     });
   }
 
-  // 4️⃣ Get fresh updated cart
+
   const updatedCart = await prisma.cart.findUnique({
     where: { customerId },
     include: {
@@ -63,7 +63,7 @@ addToCart: async (
     },
   });
 
-  // 5️⃣ Update cache safely
+
   if (updatedCart) {
     await setCartCache(customerId, updatedCart as ICart);
   }
@@ -148,9 +148,7 @@ addToCart: async (
 
     let items = cart.items;
 
-    // -----------------------------
-    // Search/filter
-    // -----------------------------
+
     if (filterOptions?.searchTerm) {
       items = items.filter(item =>
         item.product.name.toLowerCase().includes(filterOptions.searchTerm!.toLowerCase()) ||
@@ -161,9 +159,7 @@ addToCart: async (
     if (filterOptions?.minPrice) items = items.filter(i => i.product.price >= filterOptions.minPrice!);
     if (filterOptions?.maxPrice) items = items.filter(i => i.product.price <= filterOptions.maxPrice!);
 
-    // -----------------------------
-    // Sort
-    // -----------------------------
+
     if (options?.sortBy && options.sortOrder) {
       const sortBy = options.sortBy;
       items = items.sort((a, b) => {
@@ -175,9 +171,6 @@ addToCart: async (
       });
     }
 
-    // -----------------------------
-    // Pagination
-    // -----------------------------
     const { page, limit, skip } = paginationHelper.calculatePagination(options || {});
     const paginatedItems = items.slice(skip, skip + limit);
 

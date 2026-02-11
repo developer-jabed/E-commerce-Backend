@@ -11,7 +11,7 @@ export const CartController = {
     const payload: IAddToCartPayload = req.body;
     const customerId = req.user.customerId;
 
-    console.log("Customer ID ::: ", req.user);
+
     const cart = await CartService.addToCart(customerId, payload);
 
     sendResponse(res, { statusCode: 200, success: true, message: "Product added to cart", data: cart });

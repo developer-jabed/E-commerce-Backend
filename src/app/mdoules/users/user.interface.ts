@@ -1,4 +1,3 @@
-// src/modules/user/user.interface.ts
 
 import { Role } from "@prisma/client";
 

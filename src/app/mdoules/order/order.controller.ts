@@ -9,7 +9,7 @@ import { OrderStatus } from "@prisma/client";
 
 export const createOrder = catchAsync(
   async (req: Request & { user?: any }, res: Response) => {
-    console.log("user:::::::", req.user);
+
     const result = await OrderService.createOrderFromCart(req.user.customerId);
 
 

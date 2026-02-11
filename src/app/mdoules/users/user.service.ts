@@ -1,4 +1,4 @@
-// src/modules/user/user.service.ts
+
 import { Role } from "@prisma/client";
 import config from "../../../config";
 import { fileUploader } from "../../helper/fileUploader";
@@ -10,7 +10,7 @@ import { Request } from "express";
 
 export const userService = {
   createAdmin: async (req: Request) => {
-    const { name, email, password, roleLabel } = req.body; // now correct
+    const { name, email, password, roleLabel } = req.body; 
 
     if (!name || !email || !password) {
       throw new Error("Name, email, and password are required");

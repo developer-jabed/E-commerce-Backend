@@ -5,7 +5,7 @@ import httpStatus from "http-status";
 import pick from "../../helper/pick";
 import { ReviewService } from "./review.service";
 
-/* ================= CREATE REVIEW ================= */
+
 export const createReview = catchAsync(
   async (req: Request & { user?: any }, res: Response) => {
     const result = await ReviewService.createReview(

@@ -6,7 +6,7 @@ import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 import ApiError from "../../errors/api.error";
 
-// HELPER to parse time strings like "7d", "1y", etc.
+
 const parseTime = (time: string, defaultMs: number) => {
   const unit = time.slice(-1);
   const value = parseInt(time.slice(0, -1));
@@ -25,7 +25,7 @@ const parseTime = (time: string, defaultMs: number) => {
 
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
-    console.log(req)
+
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -92,7 +92,7 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
 const changePassword = catchAsync(async (req: Request & { user?: any }, res: Response) => {
   if (!req.user) throw new Error("Unauthorized");
 
-  console.log(req.body)
+
   const result = await AuthServices.changePassword(req.user, req.body);
 
   sendResponse(res, {
@@ -106,7 +106,7 @@ const changePassword = catchAsync(async (req: Request & { user?: any }, res: Res
 
 
 const getMe = catchAsync(async (req: Request & { user?: any }, res: Response) => {
-  console.log("req.user:", req.user); 
+
 
   if (!req.user) throw new Error("Unauthorized");
 

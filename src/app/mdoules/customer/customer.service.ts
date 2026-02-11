@@ -1,11 +1,10 @@
 
-import { Admin, Customer, Prisma } from "@prisma/client";
+import {  Customer, Prisma } from "@prisma/client";
 import ApiError from "../../errors/api.error";
 import httpStatus from "http-status";
 import { IOptions, paginationHelper } from "../../helper/paginationHelper";
 import { prisma } from "../../shared/prisma";
 import { ICustomerFilterRequest } from "./customer.interface";
-import { customerFilterableFields } from "./customer.constant";
 
 
 
@@ -18,7 +17,7 @@ const getAllFromDB = async (
 
   const andConditions: Prisma.CustomerWhereInput[] = [];
 
-  // 🔍 SEARCH (name + email)
+
   if (searchTerm) {
     andConditions.push({
       OR: [
@@ -28,11 +27,10 @@ const getAllFromDB = async (
     });
   }
 
-  // 🎯 FILTERS
+
   Object.entries(rawFilterData).forEach(([key, value]) => {
     if (!value) return;
 
-    // 🔹 USER FIELDS
     if (key === 'name') {
       andConditions.push({
         user: {

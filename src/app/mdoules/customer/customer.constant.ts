@@ -1,4 +1,3 @@
-// customer.constant.ts
 
 export const customerSearchAbleFields = [
   'user.name',
