@@ -40,7 +40,22 @@ export const replyReview = catchAsync(
   }
 );
 
-/* ================= GET REVIEWS ================= */
+export const updateReviewController = catchAsync(
+  async (req: Request & { user?: any }, res: Response) => {
+    const result = await ReviewService.updateReview(
+      req.user.customerId,
+      req.params.id,
+      req.body
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Review updated successfully",
+      data: result,
+    });
+  }
+);
 export const getProductReviews = catchAsync(
   async (req: Request, res: Response) => {
     const options = pick(req.query, ["page", "limit"]);
@@ -59,3 +74,15 @@ export const getProductReviews = catchAsync(
     });
   }
 );
+
+export const deleteReviewController = catchAsync(
+  async (req: Request & { user?: any }, res: Response) => {
+    const result = await ReviewService.ReviewDelete(req.user.customerId, req.params.id);
+
+    sendResponse(res, {
+      statusCode: httpStatus.NO_CONTENT,
+      success: true,
+      message: "Review deleted successfully",
+      data: result,
+    });
+  });  

@@ -63,22 +63,29 @@ const replyToReview = async (
 const updateReview = async (
   customerId: string,
   reviewId: string,
-  payload: any
+  payload: { comment?: string; rating?: number; photoUrls?: string[] }
 ) => {
-  const parentReview = await prisma.review.findUnique({
+
+  const review = await prisma.review.findUnique({
     where: { id: reviewId },
   });
 
-  if (!parentReview) {
+  if (!review) {
     throw new ApiError(httpStatus.NOT_FOUND, "Review not found");
   }
 
-  return prisma.review.create({
+
+  if (review.customerId !== customerId) {
+    throw new ApiError(httpStatus.FORBIDDEN, "You cannot update this review");
+  }
+
+
+  return prisma.review.update({
+    where: { id: reviewId },
     data: {
-      productId: parentReview.productId,
-      customerId,
-      parentId: reviewId,
-      comment: payload.comment,
+      comment: payload.comment ?? review.comment,
+      rating: payload.rating ?? review.rating,
+      photoUrls: payload.photoUrls ?? review.photoUrls,
     },
   });
 };
@@ -138,8 +145,28 @@ const getProductReviews = async (
   };
 };
 
+const ReviewDelete = async (customerId: string, reviewId: string) => {
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+  });
+  
+  if (!review) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Review not found");
+  }
+
+  if (review.customerId !== customerId) {
+    throw new ApiError(httpStatus.FORBIDDEN, "You cannot delete this review");
+  }
+
+  return prisma.review.delete({
+    where: { id: reviewId },
+  });
+};
+
 export const ReviewService = {
   createReview,
+  updateReview,
   replyToReview,
   getProductReviews,
+  ReviewDelete,
 };
