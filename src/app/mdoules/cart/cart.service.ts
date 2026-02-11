@@ -1,78 +1,68 @@
-
 import { IAddToCartPayload, IUpdateCartItemPayload, ICart, ICartFilterOptions } from "./cart.interface";
-import { getCartCache, setCartCache, deleteCartCache } from "./cart.cache";
 import { IOptions, paginationHelper } from "../../helper/paginationHelper";
 import { prisma } from "../../shared/prisma";
 
 export const CartService = {
-addToCart: async (
-  customerId: string,
-  payload: IAddToCartPayload
-): Promise<ICart> => {
+  addToCart: async (
+    customerId: string,
+    payload: IAddToCartPayload
+  ): Promise<ICart> => {
 
-
-  let cart = await prisma.cart.findUnique({
-    where: { customerId },
-    include: { items: true },
-  });
-
-  if (!cart) {
-    cart = await prisma.cart.create({
-      data: { customerId },
+    let cart = await prisma.cart.findUnique({
+      where: { customerId },
       include: { items: true },
     });
-  }
 
+    if (!cart) {
+      cart = await prisma.cart.create({
+        data: { customerId },
+        include: { items: true },
+      });
+    }
 
-  const existingItem = await prisma.cartItem.findFirst({
-    where: {
-      cartId: cart.id,
-      productId: payload.productId,
-    },
-  });
-
-  if (existingItem) {
-
-    await prisma.cartItem.update({
-      where: { id: existingItem.id },
-      data: {
-        quantity: {
-          increment: payload.quantity,
-        },
-      },
-    });
-  } else {
-    await prisma.cartItem.create({
-      data: {
+    const existingItem = await prisma.cartItem.findFirst({
+      where: {
         cartId: cart.id,
         productId: payload.productId,
-        quantity: payload.quantity,
       },
     });
-  }
 
+    if (existingItem) {
+      await prisma.cartItem.update({
+        where: { id: existingItem.id },
+        data: {
+          quantity: {
+            increment: payload.quantity,
+          },
+        },
+      });
+    } else {
+      await prisma.cartItem.create({
+        data: {
+          cartId: cart.id,
+          productId: payload.productId,
+          quantity: payload.quantity,
+        },
+      });
+    }
 
-  const updatedCart = await prisma.cart.findUnique({
-    where: { customerId },
-    include: {
-      items: {
-        include: {
-          product: true,
+    const updatedCart = await prisma.cart.findUnique({
+      where: { customerId },
+      include: {
+        items: {
+          include: { product: true },
         },
       },
-    },
-  });
+    });
 
+    return updatedCart as ICart;
+  },
 
-  if (updatedCart) {
-    await setCartCache(customerId, updatedCart as ICart);
-  }
+  updateItemQuantity: async (
+    customerId: string,
+    payload: IUpdateCartItemPayload
+  ): Promise<ICart> => {
 
-  return updatedCart as ICart;
-},
-
-
-  updateItemQuantity: async (customerId: string, payload: IUpdateCartItemPayload): Promise<ICart> => {
     const cart = await prisma.cart.findUnique({
       where: { customerId },
       include: { items: { include: { product: true } } },
@@ -86,7 +76,6 @@ addToCart: async (
     await prisma.cartItem.update({
       where: { id: item.id },
       data: { quantity: payload.quantity },
-      include: { product: true },
     });
 
     const updatedCart = await prisma.cart.findUnique({
@@ -94,12 +83,14 @@ addToCart: async (
       include: { items: { include: { product: true } } },
     });
 
-    if (updatedCart) await setCartCache(customerId, updatedCart as ICart);
-
     return updatedCart as ICart;
   },
 
-  removeItem: async (customerId: string, productId: string): Promise<ICart> => {
+  removeItem: async (
+    customerId: string,
+    productId: string
+  ): Promise<ICart> => {
+
     const cart = await prisma.cart.findUnique({
       where: { customerId },
       include: { items: true },
@@ -110,44 +101,53 @@ addToCart: async (
     const item = cart.items.find(i => i.productId === productId);
     if (!item) throw new Error("Product not in cart");
 
-    await prisma.cartItem.delete({ where: { id: item.id } });
+    await prisma.cartItem.delete({
+      where: { id: item.id },
+    });
 
     const updatedCart = await prisma.cart.findUnique({
       where: { customerId },
       include: { items: { include: { product: true } } },
     });
 
-    if (updatedCart) await setCartCache(customerId, updatedCart as ICart);
-
     return updatedCart as ICart;
   },
 
   clearCart: async (customerId: string): Promise<ICart> => {
-    const cart = await prisma.cart.findUnique({ where: { customerId }, include: { items: true } });
+
+    const cart = await prisma.cart.findUnique({
+      where: { customerId },
+      include: { items: true },
+    });
+
     if (!cart) throw new Error("Cart not found");
 
-    await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+    await prisma.cartItem.deleteMany({
+      where: { cartId: cart.id },
+    });
 
     const clearedCart = await prisma.cart.findUnique({
       where: { customerId },
       include: { items: { include: { product: true } } },
     });
 
-    if (clearedCart) await setCartCache(customerId, clearedCart as ICart);
-
     return clearedCart as ICart;
   },
 
-  getCart: async (customerId: string, filterOptions?: ICartFilterOptions, options?: IOptions): Promise<{ meta: any; data: ICart['items'] }> => {
-    const cart = (await getCartCache(customerId)) || (await prisma.cart.findUnique({
+  getCart: async (
+    customerId: string,
+    filterOptions?: ICartFilterOptions,
+    options?: IOptions
+  ): Promise<{ meta: any; data: ICart["items"] }> => {
+
+    const cart = await prisma.cart.findUnique({
       where: { customerId },
       include: { items: { include: { product: true } } },
-    }));
+    });
 
     if (!cart) throw new Error("Cart not found");
 
     let items = cart.items;
-
 
     if (filterOptions?.searchTerm) {
       items = items.filter(item =>
@@ -156,15 +156,18 @@ addToCart: async (
       );
     }
 
-    if (filterOptions?.minPrice) items = items.filter(i => i.product.price >= filterOptions.minPrice!);
-    if (filterOptions?.maxPrice) items = items.filter(i => i.product.price <= filterOptions.maxPrice!);
+    if (filterOptions?.minPrice !== undefined && filterOptions?.minPrice !== null)
+      items = items.filter(i => i.product.price >= filterOptions.minPrice!);
 
+    if (filterOptions?.maxPrice !== undefined && filterOptions?.maxPrice !== null)
+      items = items.filter(i => i.product.price <= filterOptions.maxPrice!);
 
     if (options?.sortBy && options.sortOrder) {
       const sortBy = options.sortBy;
       items = items.sort((a, b) => {
         const aVal = (a.product as any)[sortBy];
         const bVal = (b.product as any)[sortBy];
+
         if (aVal < bVal) return options.sortOrder === "asc" ? -1 : 1;
         if (aVal > bVal) return options.sortOrder === "asc" ? 1 : -1;
         return 0;
