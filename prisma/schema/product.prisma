@@ -2,6 +2,7 @@ model Product {
   id          String      @id @default(uuid())
   name        String
   description String?
+  category    CategoryType?
   price       Float
   stock       Int
   images      String[]     // Array of image URLs

@@ -6,7 +6,7 @@ import { prisma } from "../../shared/prisma";
 
 export const CartService = {
   addToCart: async (customerId: string, payload: IAddToCartPayload): Promise<ICart> => {
-    // Check cache first
+
     let cart = await getCartCache(customerId);
 
     if (!cart) {
