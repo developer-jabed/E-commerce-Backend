@@ -18,6 +18,8 @@ router.post(
     AuthController.loginUser
 );
 
+router.post("/logout", auth("CUSTOMER", "ADMIN"), AuthController.logout);
+
 
 router.post(
     '/refresh-token',

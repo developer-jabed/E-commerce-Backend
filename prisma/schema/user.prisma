@@ -6,7 +6,7 @@ model User {
   avatarUrl String?
   role      Role     @default(CUSTOMER)
   isBlocked Boolean  @default(false)
-
+  blockedUntil DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

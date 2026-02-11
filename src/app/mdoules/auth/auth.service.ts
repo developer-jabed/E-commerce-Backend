@@ -21,21 +21,43 @@ interface ChangePasswordPayload {
 
 
 const loginUser = async (payload: LoginPayload) => {
-  // 1️⃣ Find user
   const user = await prisma.user.findUniqueOrThrow({
     where: { email: payload.email },
-    include: { customer: true }, // include customer relation
+    include: { customer: true },
   });
 
   if (user.isBlocked) {
-    throw new ApiError(httpStatus.FORBIDDEN, "User is not active");
+    if (user.blockedUntil && new Date() > user.blockedUntil) {
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          isBlocked: false,
+          blockedUntil: null,
+        },
+      });
+    } else {
+      throw new ApiError(
+        httpStatus.FORBIDDEN,
+        `User is blocked until ${user.blockedUntil}`
+      );
+    }
   }
 
-  // 2️⃣ Verify password
-  const isPasswordValid = await bcrypt.compare(payload.password, user.password!);
+
+
+  const isPasswordValid = await bcrypt.compare(
+    payload.password,
+    user.password!
+  );
+
   if (!isPasswordValid) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, "Password incorrect");
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED,
+      "Password incorrect"
+    );
   }
+
 
 
   const payloadData = {
@@ -43,7 +65,7 @@ const loginUser = async (payload: LoginPayload) => {
     name: user.name,
     email: user.email,
     role: user.role,
-    customerId: user.customer?.id || null, 
+    customerId: user.customer?.id || null,
   };
 
   const accessToken = jwtHelpers.generateToken(

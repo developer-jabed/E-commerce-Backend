@@ -14,6 +14,8 @@ router.post("/", auth("CUSTOMER"), createOrder);
 router.get("/my-orders", auth("CUSTOMER"), myOrders);
 router.get("/:id", auth("CUSTOMER", "ADMIN"), getOrder);
 router.patch("/:id/cancel", auth("CUSTOMER"), cancelOrder);
+
+
 router.patch("/:id/status", auth("ADMIN"), updateOrderStatus);
 
-export  const orderRoutes = router;
+export const orderRoutes = router;

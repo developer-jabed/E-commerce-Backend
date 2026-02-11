@@ -5,47 +5,72 @@ import { IOptions, paginationHelper } from "../../helper/paginationHelper";
 import { prisma } from "../../shared/prisma";
 
 export const CartService = {
-  addToCart: async (customerId: string, payload: IAddToCartPayload): Promise<ICart> => {
+addToCart: async (
+  customerId: string,
+  payload: IAddToCartPayload
+): Promise<ICart> => {
 
-    let cart = await getCartCache(customerId);
+  // 1️⃣ Always get cart from DB for mutation safety
+  let cart = await prisma.cart.findUnique({
+    where: { customerId },
+    include: { items: true },
+  });
 
-    if (!cart) {
-      // Check DB
-      let dbCart = await prisma.cart.findUnique({
-        where: { customerId },
-        include: { items: { include: { product: true } } },
-      });
-
-      if (!dbCart) {
-        dbCart = await prisma.cart.create({ data: { customerId }, include: { items: { include: { product: true } } } });
-      }
-      cart = dbCart;
-    }
-
-    const existingItem = cart.items.find(i => i.productId === payload.productId);
-
-    if (existingItem) {
-      await prisma.cartItem.update({
-        where: { id: existingItem.id },
-        data: { quantity: existingItem.quantity + payload.quantity },
-        include: { product: true },
-      });
-    } else {
-      await prisma.cartItem.create({
-        data: { cartId: cart.id, productId: payload.productId, quantity: payload.quantity },
-      });
-    }
-
-    // Update cache
-    const updatedCart = await prisma.cart.findUnique({
-      where: { customerId },
-      include: { items: { include: { product: true } } },
+  if (!cart) {
+    cart = await prisma.cart.create({
+      data: { customerId },
+      include: { items: true },
     });
+  }
 
-    if (updatedCart) await setCartCache(customerId, updatedCart as ICart);
+  // 2️⃣ Check if product exists in cart (FROM DB, not cache)
+  const existingItem = await prisma.cartItem.findFirst({
+    where: {
+      cartId: cart.id,
+      productId: payload.productId,
+    },
+  });
 
-    return updatedCart as ICart;
-  },
+  if (existingItem) {
+    // 3️⃣ Safe atomic increment
+    await prisma.cartItem.update({
+      where: { id: existingItem.id },
+      data: {
+        quantity: {
+          increment: payload.quantity,
+        },
+      },
+    });
+  } else {
+    await prisma.cartItem.create({
+      data: {
+        cartId: cart.id,
+        productId: payload.productId,
+        quantity: payload.quantity,
+      },
+    });
+  }
+
+  // 4️⃣ Get fresh updated cart
+  const updatedCart = await prisma.cart.findUnique({
+    where: { customerId },
+    include: {
+      items: {
+        include: {
+          product: true,
+        },
+      },
+    },
+  });
+
+  // 5️⃣ Update cache safely
+  if (updatedCart) {
+    await setCartCache(customerId, updatedCart as ICart);
+  }
+
+  return updatedCart as ICart;
+},
+
 
   updateItemQuantity: async (customerId: string, payload: IUpdateCartItemPayload): Promise<ICart> => {
     const cart = await prisma.cart.findUnique({
