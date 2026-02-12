@@ -9,7 +9,7 @@ Production-Ready | Prisma | PostgreSQL | Redis | JWT | TypeScript
 
 🌍 Live Demo
 
-🔗 Live API: https://your-live-api-link.com
+🔗 Live API: https://e-commerce-backend-bghq.onrender.com/
 
 
 📦 GitHub Repository
